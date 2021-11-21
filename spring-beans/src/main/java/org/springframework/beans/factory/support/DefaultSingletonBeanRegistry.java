@@ -161,6 +161,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	@Override
 	@Nullable
 	public Object getSingleton(String beanName) {
+		//true参数允许创建早期引用
 		return getSingleton(beanName, true);
 	}
 
@@ -174,15 +175,22 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	@Nullable
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+		//检查单例缓存中是否存在对应实例
 		Object singletonObject = this.singletonObjects.get(beanName);
+		//单例缓存中不存在 & 返回指定的单例bean正在创建中
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			synchronized (this.singletonObjects) {
+				//检查二级缓存中是否有该实例（已经提前暴露了）
 				singletonObject = this.earlySingletonObjects.get(beanName);
 				if (singletonObject == null && allowEarlyReference) {
+					//二级缓存中也没有 && 允许创建早期引用
+					//从三级缓存中获取。ObjectFactory封装了获取早期引用的逻辑，并存储在singletonFactories
 					ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
 					if (singletonFactory != null) {
 						singletonObject = singletonFactory.getObject();
+						//二级缓存加入这对映射
 						this.earlySingletonObjects.put(beanName, singletonObject);
+						//三级缓存则移出该key
 						this.singletonFactories.remove(beanName);
 					}
 				}
