@@ -1331,11 +1331,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		// Give any InstantiationAwareBeanPostProcessors the opportunity to modify the
 		// state of the bean before properties are set. This can be used, for example,
 		// to support styles of field injection.
+		// 给InstantiationAwareBeanPostProcessors一次机会在属性设置前来修改bean，如：可以用来支持属性注入的类型
 		if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
 			for (BeanPostProcessor bp : getBeanPostProcessors()) {
 				if (bp instanceof InstantiationAwareBeanPostProcessor) {
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+					/*
+					 * AfterInstantiation
+					 * 在通过构造函数或工厂方法实例化bean之后，但在Spring属性填充（来自显式属性或自动注入）发生之前，执行操作
+					 * 这是在Spring的自动注入（autowiring）开始之前对给定bean实例执行自定义字段注入的理想回调。
+					 */
 					if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+						//如果返回false，则直接结束，不再继续执行了。返回值为是否继续填充bean
 						return;
 					}
 				}
@@ -1344,21 +1351,26 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		PropertyValues pvs = (mbd.hasPropertyValues() ? mbd.getPropertyValues() : null);
 
+		//先自动注入
 		int resolvedAutowireMode = mbd.getResolvedAutowireMode();
 		if (resolvedAutowireMode == AUTOWIRE_BY_NAME || resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 			MutablePropertyValues newPvs = new MutablePropertyValues(pvs);
 			// Add property values based on autowire by name if applicable.
+			// 根据名称自动注入
 			if (resolvedAutowireMode == AUTOWIRE_BY_NAME) {
 				autowireByName(beanName, mbd, bw, newPvs);
 			}
 			// Add property values based on autowire by type if applicable.
+			// 根据类型自动注入
 			if (resolvedAutowireMode == AUTOWIRE_BY_TYPE) {
 				autowireByType(beanName, mbd, bw, newPvs);
 			}
 			pvs = newPvs;
 		}
 
+		//返回此Factory是否持有将在创建时应用于单例bean的InstantiationAwareBeanPostProcessor。
 		boolean hasInstAwareBpps = hasInstantiationAwareBeanPostProcessors();
+		//是否需要依赖检查3.0版本已经弃用
 		boolean needsDepCheck = (mbd.getDependencyCheck() != AbstractBeanDefinition.DEPENDENCY_CHECK_NONE);
 
 		if (hasInstAwareBpps || needsDepCheck) {
@@ -1370,6 +1382,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				for (BeanPostProcessor bp : getBeanPostProcessors()) {
 					if (bp instanceof InstantiationAwareBeanPostProcessor) {
 						InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
+						//开始属性填充。比如AutowiredAnnotationBeanPostProcessor
 						pvs = ibp.postProcessPropertyValues(pvs, filteredPds, bw.getWrappedInstance(), beanName);
 						if (pvs == null) {
 							return;
@@ -1378,11 +1391,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 			if (needsDepCheck) {
+				//依赖检查，对应dependencyCheck属性，3.0版本已经弃用
 				checkDependencies(beanName, mbd, filteredPds, pvs);
 			}
 		}
 
 		if (pvs != null) {
+			//应用所有的PropertyValue列表到bean中
 			applyPropertyValues(beanName, mbd, bw, pvs);
 		}
 	}
@@ -1398,12 +1413,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected void autowireByName(
 			String beanName, AbstractBeanDefinition mbd, BeanWrapper bw, MutablePropertyValues pvs) {
-
+		//寻找bw中需要依赖注入的属性
 		String[] propertyNames = unsatisfiedNonSimpleProperties(mbd, bw);
 		for (String propertyName : propertyNames) {
 			if (containsBean(propertyName)) {
+				//递归获取bean（也能会有循环依赖的现象）
 				Object bean = getBean(propertyName);
 				pvs.add(propertyName, bean);
+				//注册依赖和被依赖的信息
 				registerDependentBean(propertyName, beanName);
 				if (logger.isDebugEnabled()) {
 					logger.debug("Added autowiring by name from bean name '" + beanName +

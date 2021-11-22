@@ -222,6 +222,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 				if (logger.isDebugEnabled()) {
 					logger.debug("Creating shared instance of singleton bean '" + beanName + "'");
 				}
+				//将beanName加入到singletonsCurrentlyInCreation这个set里面，表示创建中；也可能会抛出循环依赖的异常（在prototype循环依赖场景中）
 				beforeSingletonCreation(beanName);
 				boolean newSingleton = false;
 				boolean recordSuppressedExceptions = (this.suppressedExceptions == null);
@@ -253,6 +254,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (recordSuppressedExceptions) {
 						this.suppressedExceptions = null;
 					}
+					//将beanName从singletonsCurrentlyInCreation这个set里面remove掉
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
@@ -407,9 +409,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 * @param dependentBeanName the name of the dependent bean
 	 */
 	public void registerDependentBean(String beanName, String dependentBeanName) {
+		//对于autowireByName方法，propertyName是beanName，beanName是dependentBeanName
 		String canonicalName = canonicalName(beanName);
 
 		synchronized (this.dependentBeanMap) {
+			//该map记录了被依赖关系，即key对应被依赖的bean name，value对应依赖了key的bean name集合，可以理解为“谁依赖我”
 			Set<String> dependentBeans =
 					this.dependentBeanMap.computeIfAbsent(canonicalName, k -> new LinkedHashSet<>(8));
 			if (!dependentBeans.add(dependentBeanName)) {
@@ -418,6 +422,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		}
 
 		synchronized (this.dependenciesForBeanMap) {
+			//该map记录了依赖关系，与dependentBeanMap正好相反，可以理解为“我依赖谁”
 			Set<String> dependenciesForBean =
 					this.dependenciesForBeanMap.computeIfAbsent(dependentBeanName, k -> new LinkedHashSet<>(8));
 			dependenciesForBean.add(canonicalName);
