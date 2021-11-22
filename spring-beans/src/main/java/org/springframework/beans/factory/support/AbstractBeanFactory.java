@@ -251,8 +251,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		 * 为什么首先会使用这段代码呢？
 		 * 因为在创建单例bean的时候会存在依赖注入的情况，而在创建依赖的时候为了避免循环依赖，
 		 * spring创建的原则是不等bean创建完成就将创建bean的ObjectFactory提早曝光，
-		 * 也就是将ObjectFactory加入到缓存中，一旦下个bean创建时候需要依赖上个bean则直接使用ObjectFacory
-		 *
+		 * 也就是将ObjectFactory加入到缓存中，一旦下个bean创建时候需要依赖上个bean则直接使用ObjectFactory
+
 		 */
 		//直接尝试从缓存获取或者singletonFactories中的ObjectFactory中获取
 		// Eagerly check singleton cache for manually registered singletons.

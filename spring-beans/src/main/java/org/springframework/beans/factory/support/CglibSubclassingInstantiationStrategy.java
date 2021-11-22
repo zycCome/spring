@@ -122,6 +122,7 @@ public class CglibSubclassingInstantiationStrategy extends SimpleInstantiationSt
 			else {
 				try {
 					Constructor<?> enhancedSubclassConstructor = subclass.getConstructor(ctor.getParameterTypes());
+					//构建实例
 					instance = enhancedSubclassConstructor.newInstance(args);
 				}
 				catch (Exception ex) {

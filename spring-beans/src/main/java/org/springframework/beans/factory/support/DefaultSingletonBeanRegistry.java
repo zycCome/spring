@@ -177,7 +177,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 		//检查单例缓存中是否存在对应实例
 		Object singletonObject = this.singletonObjects.get(beanName);
-		//单例缓存中不存在 & 返回指定的单例bean正在创建中
+		//单例缓存中不存在 & 返回指定的单例bean正在创建中(发生循环依赖了)
 		if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
 			synchronized (this.singletonObjects) {
 				//检查二级缓存中是否有该实例（已经提前暴露了）
@@ -209,7 +209,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	public Object getSingleton(String beanName, ObjectFactory<?> singletonFactory) {
 		Assert.notNull(beanName, "Bean name must not be null");
+		//全局变量需要同步
 		synchronized (this.singletonObjects) {
+			//同步代码中检查缓存是否存在。因为singleton模式就是复用已经创建bean，所以这一步是必须（并且必须在同步代码中）
 			Object singletonObject = this.singletonObjects.get(beanName);
 			if (singletonObject == null) {
 				if (this.singletonsCurrentlyInDestruction) {
@@ -227,6 +229,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					this.suppressedExceptions = new LinkedHashSet<>();
 				}
 				try {
+					//创建并获取bean
 					singletonObject = singletonFactory.getObject();
 					newSingleton = true;
 				}
@@ -253,6 +256,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					afterSingletonCreation(beanName);
 				}
 				if (newSingleton) {
+					//加入缓存
 					addSingleton(beanName, singletonObject);
 				}
 			}

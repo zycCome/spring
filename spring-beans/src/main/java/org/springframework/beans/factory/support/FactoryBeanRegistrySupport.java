@@ -123,6 +123,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 							//前回调
 							beforeSingletonCreation(beanName);
 							try {
+								//在AbstractAutowireCapableBeanFactory子类中实现成了调用applyBeanPostProcessorsAfterInitialization
 								object = postProcessObjectFromFactoryBean(object, beanName);
 							}
 							catch (Throwable ex) {

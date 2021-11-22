@@ -1,5 +1,8 @@
 package com.zyc;
 
+import com.zyc.circle.contructor.A;
+import com.zyc.circle.contructor.B;
+import com.zyc.circle.contructor.C;
 import org.junit.Test;
 import org.springframework.beans.factory.xml.XmlBeanFactory;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -35,6 +38,36 @@ public class BeanFactoryTest {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("custom-beans.xml");
 		com.zyc.custom.User user = ctx.getBean(com.zyc.custom.User.class);
 		System.out.println(user.getUserName() + "," + user.getEmail());
+		ctx.close();
+	}
+
+
+	/**
+	 * 测试构造器循环依赖
+	 */
+	@Test
+	public void test4() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("circle-constructor.xml");
+		System.out.println("success");
+		ctx.close();
+	}
+
+
+	/**
+	 * 测试prototype循环依赖
+	 */
+	@Test
+	public void test5() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("circle-prototype.xml");
+		ctx.setAllowCircularReferences(false);
+		/*
+		 * prototype类型的Bean测试必须要getBean来触发。
+		 * 因为在ApplicationContext容器会启动时就初始化所有singleton类型的bean，prototype类型需要主动触发！
+		 */
+		A a = ctx.getBean(A.class);
+		B b = ctx.getBean(B.class);
+		C c = ctx.getBean(C.class);
+		System.out.println("success");
 		ctx.close();
 	}
 }
