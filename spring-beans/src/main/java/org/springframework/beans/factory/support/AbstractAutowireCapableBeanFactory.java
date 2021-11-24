@@ -429,6 +429,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		for (BeanPostProcessor processor : getBeanPostProcessors()) {
 			Object current = processor.postProcessAfterInitialization(result, beanName);
 			if (current == null) {
+				//直接短路
 				return result;
 			}
 			result = current;
@@ -596,8 +597,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 		if (earlySingletonExposure) {
 			//允许提前暴露
-			//earlySingletonReference只有在检测到又依赖循环的情况下才会不为空
-			//此时还有清理二三级缓存中该beanName的key，一级缓存中也还没有放进去。allowEarlyReference=false，也不会从三级缓存中获取，
+			//earlySingletonReference只有在检测到有依赖循环的情况下才会不为空
+			//此时还没有清理二三级缓存中该beanName的key，一级缓存中也还没有放进去。allowEarlyReference=false，也不会从三级缓存中获取，
 			//因此earlySingletonReference！=null，肯定是从二级缓存中获取的。在二级缓存中说明之前已经发生了循环依赖，当前bean已经提前暴露给其他bean了
 			Object earlySingletonReference = getSingleton(beanName, false);
 			if (earlySingletonReference != null) {
@@ -607,12 +608,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					//因为earlySingletonReference代理了bean（也就是exposedObject）
 					exposedObject = earlySingletonReference;
 				}
+				//hasDependentBean:确定是否已为给定名称注册了从属bean(既是否有bean依赖当前beanName)
 				else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
 					//allowRawInjectionDespiteWrapping:是否在循环引用的情况下使用注入生bean实例，即使被注入的bean最终被包装。默认false
 					String[] dependentBeans = getDependentBeans(beanName);
 					Set<String> actualDependentBeans = new LinkedHashSet<>(dependentBeans.length);
 					for (String dependentBean : dependentBeans) {
-						//检测依赖
+						//检测依赖。删除给定bean名称的单例实例（如果有），但前提是它没有被用于类型检查以外的其他目的。
 						if (!removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {
 							actualDependentBeans.add(dependentBean);
 						}
@@ -1751,15 +1753,18 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}, getAccessControlContext());
 		}
 		else {
+			//对特殊bean的处理，Aware接口：BeanNameAware、BeanClassLoaderAware、BeanFactoryAware
 			invokeAwareMethods(beanName, bean);
 		}
 
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
+			//应用后置处理器的beforeInitialization方法
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
 		try {
+			//激活用户自定义的init方法
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
 		catch (Throwable ex) {
@@ -1768,6 +1773,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		if (mbd == null || !mbd.isSynthetic()) {
+			//应用后置处理器的afterInitialization方法
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
 		}
 
@@ -1805,7 +1811,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	protected void invokeInitMethods(String beanName, Object bean, @Nullable RootBeanDefinition mbd)
 			throws Throwable {
-
+		//先检查bean是否实现了InitializingBean，如果是的会，会调用afterPropertiesSet方法
 		boolean isInitializingBean = (bean instanceof InitializingBean);
 		if (isInitializingBean && (mbd == null || !mbd.isExternallyManagedInitMethod("afterPropertiesSet"))) {
 			if (logger.isDebugEnabled()) {
@@ -1823,6 +1829,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 				}
 			}
 			else {
+				//执行InitializingBean的初始化方法
 				((InitializingBean) bean).afterPropertiesSet();
 			}
 		}
@@ -1832,6 +1839,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			if (StringUtils.hasLength(initMethodName) &&
 					!(isInitializingBean && "afterPropertiesSet".equals(initMethodName)) &&
 					!mbd.isExternallyManagedInitMethod(initMethodName)) {
+				//调用自定义初始化方法
 				invokeCustomInitMethod(beanName, bean, mbd);
 			}
 		}

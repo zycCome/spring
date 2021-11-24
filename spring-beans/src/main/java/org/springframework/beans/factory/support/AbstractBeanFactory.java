@@ -1627,7 +1627,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	/**
 	 * Remove the singleton instance (if any) for the given bean name,
 	 * but only if it hasn't been used for other purposes than type checking.
-	 * @param beanName the name of the bean
+	 * @param beanName the name of the beanemove the singleton instance (if any) for the given bean name,
+	 * 	 * but only if it hasn't been used for other purposes than type checking.
 	 * @return {@code true} if actually removed, {@code false} otherwise
 	 */
 	protected boolean removeSingletonIfCreatedForTypeCheckOnly(String beanName) {
@@ -1753,16 +1754,23 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 */
 	protected void registerDisposableBeanIfNecessary(String beanName, Object bean, RootBeanDefinition mbd) {
 		AccessControlContext acc = (System.getSecurityManager() != null ? getAccessControlContext() : null);
+		//确定给定bean是否需要在关闭时销毁. 默认实现检查DisposableBean接口以及指定的销毁方法和已注册的销毁DestructionAwareBeanPostProcessors。
 		if (!mbd.isPrototype() && requiresDestruction(bean, mbd)) {
 			if (mbd.isSingleton()) {
 				// Register a DisposableBean implementation that performs all destruction
 				// work for the given bean: DestructionAwareBeanPostProcessors,
 				// DisposableBean interface, custom destroy method.
+				/*
+				 * 注册一个单例模式下需要销毁的bean，此方法中会处理实现DisposableBean的bean
+				 * 并对所有的bean执行给定bean的所有销毁工作：
+				 * DestructionAwareBeanPostProcessors、DisposableBean接口、自定义销毁方法。
+				 */
 				registerDisposableBean(beanName,
 						new DisposableBeanAdapter(bean, beanName, mbd, getBeanPostProcessors(), acc));
 			}
 			else {
 				// A bean with a custom scope...
+				// 自定义scope的处理
 				Scope scope = this.scopes.get(mbd.getScope());
 				if (scope == null) {
 					throw new IllegalStateException("No Scope registered for scope name '" + mbd.getScope() + "'");
