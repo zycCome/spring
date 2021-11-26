@@ -124,9 +124,18 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			closeBeanFactory();
 		}
 		try {
+			//创建DefaultListableBeanFactory
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
+			// 为序列化目的指定一个id，如果需要，允许将这个BeanFactory从这个id反序列化回BeanFactory对象。
 			beanFactory.setSerializationId(getId());
+			/**
+			 * 自定义此上下文使用的内部bean工厂。每次被{@link refresh()}尝试调用。
+			 * 默认实现应用此上下文的{@linkplain setallowbeandefinitionoverride " allowbeandefinitionoverride "}和
+			 * {@linkplain setAllowCircularReferences "allowCircularReferences"}设置，（这两个属性可以覆盖beanFacory的）
+			 * 如果指定的话。可以在子类中重写，以定制任何{@link DefaultListableBeanFactory}的设置。
+			 */
 			customizeBeanFactory(beanFactory);
+			// 初始化DocumentReader,进行XML读取以及解析
 			loadBeanDefinitions(beanFactory);
 			this.beanFactory = beanFactory;
 		}

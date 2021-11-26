@@ -533,24 +533,31 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// 注册拦截bean创建的bean处理器。
 				registerBeanPostProcessors(beanFactory);
 
 				// Initialize message source for this context.
+				// 为上下文初始化message源，即不同语言的消息体，国际化处理
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// 初始化应用消息广播器，并赋值给applicationEventMulticaster变量
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// 留给子类来初始化其他bean
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// 在所有注册bean中查找Listener bean，并注册到消息广播器中
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// 初始化剩下的单实例（非延迟加载的）
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
+				// 玩抽刷新过程，通知生命周期处理器lifecycleProcessor刷新过程，同时发出ContextRefreshedEvent
 				finishRefresh();
 			}
 
@@ -593,10 +600,12 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		}
 
 		// Initialize any placeholder property sources in the context environment.
+		// 在上下文环境中初始化任何占位符属性源.当前类是空实现，留给子类实现
 		initPropertySources();
 
 		// Validate that all properties marked as required are resolvable:
 		// see ConfigurablePropertyResolver#setRequiredProperties
+		// 验证所有标记为required的属性都是可解析的
 		getEnvironment().validateRequiredProperties();
 
 		// Store pre-refresh ApplicationListeners...
@@ -611,6 +620,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 		// Allow for the collection of early ApplicationEvents,
 		// to be published once the multicaster is available...
+		// 允许早期ApplicationEvents的集合，一旦多播器可用，就可以发布…
 		this.earlyApplicationEvents = new LinkedHashSet<>();
 	}
 
@@ -630,7 +640,20 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #getBeanFactory()
 	 */
 	protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+		/**
+		 * 子类必须实现此方法才能执行实际的配置加载。该方法在任何其他初始化工作之前由{@link refresh()}调用。
+		 * 一个子类将创建一个新的bean工厂并保存对它的引用，或者返回一个它保存的单个BeanFactory实例。
+		 * 在后一种情况下，如果多次刷新上下文，它通常会抛出一个IllegalStateException。
+		 */
+		// 如初始化BeanFactory，然后进行XML文件读取，并将得到的BeanFactory记录在当前对象的属性中
 		refreshBeanFactory();
+		/**
+		 * 子类必须返回它们的内部bean工厂。
+		 * 它们应该有效地实现查找，以便可以重复调用它，而不会影响性能。
+		 * 注意:在返回内部bean工厂之前，子类应该检查上下文是否仍然是活动的。
+		 * 一旦关闭上下文，通常应该认为内部工厂不可用。
+		 */
+		//返回当前对象的beanFactory属性
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (logger.isDebugEnabled()) {
 			logger.debug("Bean factory for " + getDisplayName() + ": " + beanFactory);

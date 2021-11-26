@@ -95,4 +95,36 @@ public class BeanFactoryTest {
 		bean.sayHello();
 		ctx.close();
 	}
+
+
+	/**
+	 * 测试
+	 * 1.  doGetBean(FACTORY_BEAN_PREFIX + beanName, FactoryBean.class, null, true); 最后一个参数typeCheckOnly=true的场景
+	 * 2. typeCheckOnly=true时 ======>
+	 * 			if (!typeCheckOnly) {
+	 * 				markBeanAsCreated(beanName);//将beanName放入alreadyCreated集合
+	 *           }
+	 * 3. alreadyCreated又会在循环依赖的    removeSingletonIfCreatedForTypeCheckOnly(dependentBean)中用到
+	 *
+	 * 结论：
+	 * 	1. FactoryBean中循环依赖也没找到removeSingletonIfCreatedForTypeCheckOnly(dependentBean)进入另一个分支的场景
+	 * 	2. AbstractBeanFactory#doGetBean中有如下代码，说明创建过程出现异常的bean会从alreadyCreated这个集合中清楚，这样理论上就会进行另一个分支了
+	 *
+	 * 				catch (BeansException ex) {
+	 * 					cleanupAfterBeanCreationFailure(beanName);
+	 * 					throw ex;
+	 *              }
+	 */
+	@Test
+	public void test7() {
+		XmlBeanFactory ctx = new XmlBeanFactory(new ClassPathResource("factoryBean.xml"));
+		System.out.println("type1==" + ctx.getType("userFactory1"));
+		/**
+		 * // No type found for shortcut FactoryBean instance:
+		 * // fall back to full creation of the FactoryBean instance.
+		 * // 没有找到快捷FactoryBean实例的类型:退回到完全创建FactoryBean实例。(userFactory2的getObjectType==null) 为什么这样做呢？
+		 * 	return super.getTypeForFactoryBean(beanName, mbd);
+		 */
+		System.out.println("type2==" + ctx.getType("userFactory2"));
+	}
 }

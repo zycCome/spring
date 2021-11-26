@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd"
+>
+
+	<!--返回的是User，不是UserFactor-->
+	<bean name="userFactory1" class="com.zyc.factorybean.UserFactoryBean">
+	</bean>
+
+	<!--返回的是User，不是UserFactor-->
+	<bean name="userFactory2" class="com.zyc.factorybean.UserFactoryBeanNotOverride" autowire="byType">
+	</bean>
+
+	<bean name="userHolder" class="com.zyc.factorybean.UserHolder" autowire="byType">
+	</bean>
+</beans>
