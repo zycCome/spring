@@ -1,5 +1,6 @@
 package com.zyc;
 
+import com.zyc.propertyeditor.PropertyEditorUser;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -19,6 +20,19 @@ public class ApplicationConextTest {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:applicationContext/beans.xml");
 		User user = ctx.getBean(User.class);
 		System.out.println("user = " + user);
+		ctx.close();
+	}
+
+
+
+	/**
+	 * 测试PropertyEditor默认初始化的时间
+	 */
+	@Test
+	public void test2() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:applicationContext/beans-property-editor.xml");
+		PropertyEditorUser user = ctx.getBean(PropertyEditorUser.class);
+		System.out.println(user.getTest());
 		ctx.close();
 	}
 

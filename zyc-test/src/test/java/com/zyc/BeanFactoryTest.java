@@ -108,7 +108,7 @@ public class BeanFactoryTest {
 	 *
 	 * 结论：
 	 * 	1. FactoryBean中循环依赖也没找到removeSingletonIfCreatedForTypeCheckOnly(dependentBean)进入另一个分支的场景
-	 * 	2. AbstractBeanFactory#doGetBean中有如下代码，说明创建过程出现异常的bean会从alreadyCreated这个集合中清楚，这样理论上就会进行另一个分支了
+	 * 	2. AbstractBeanFactory#doGetBean中有如下代码，说明创建过程出现异常的bean会从alreadyCreated这个集合中清除，这样理论上就会进行另一个分支了
 	 *
 	 * 				catch (BeansException ex) {
 	 * 					cleanupAfterBeanCreationFailure(beanName);
@@ -127,4 +127,5 @@ public class BeanFactoryTest {
 		 */
 		System.out.println("type2==" + ctx.getType("userFactory2"));
 	}
+
 }
