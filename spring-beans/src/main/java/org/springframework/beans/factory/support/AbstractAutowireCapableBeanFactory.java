@@ -609,6 +609,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					exposedObject = earlySingletonReference;
 				}
 				//hasDependentBean:确定是否已为给定名称注册了从属bean(既是否有bean依赖当前beanName)
+				//返回依赖于指定bean的所有bean的名称（如果有）。
 				else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
 					//allowRawInjectionDespiteWrapping:是否在循环引用的情况下使用注入生bean实例，即使被注入的bean最终被包装。默认false
 					String[] dependentBeans = getDependentBeans(beanName);
