@@ -1,5 +1,6 @@
 package com.zyc;
 
+import com.zyc.aop.TestBean;
 import com.zyc.propertyeditor.PropertyEditorUser;
 import org.junit.Test;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -8,7 +9,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  * @author zhuyc
  * @date 2021/11/20 12:13
  **/
-public class ApplicationConextTest {
+public class ApplicationContextTest {
 
 	/**
 	 * 对应prepareRefresh();
@@ -24,7 +25,6 @@ public class ApplicationConextTest {
 	}
 
 
-
 	/**
 	 * 测试PropertyEditor默认初始化的时间
 	 */
@@ -33,6 +33,18 @@ public class ApplicationConextTest {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:applicationContext/beans-property-editor.xml");
 		PropertyEditorUser user = ctx.getBean(PropertyEditorUser.class);
 		System.out.println(user.getTest());
+		ctx.close();
+	}
+
+
+	/**
+	 * 测试PropertyEditor默认初始化的时间
+	 */
+	@Test
+	public void testAop1() {
+		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("classpath:aop/aop1.xml");
+		TestBean bean = (TestBean)ctx.getBean("test");
+		bean.test();
 		ctx.close();
 	}
 

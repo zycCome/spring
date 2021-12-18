@@ -226,9 +226,11 @@ public abstract class AopUtils {
 			return false;
 		}
 
+		// 此时pc表示TransactionAttributeSourcePointcut。pc.getMethodMatcher()返回的正是自身
 		MethodMatcher methodMatcher = pc.getMethodMatcher();
 		if (methodMatcher == MethodMatcher.TRUE) {
 			// No need to iterate the methods if we're matching any method anyway...
+			// 如果我们要匹配任何方法，就不需要迭代这些方法……
 			return true;
 		}
 
@@ -296,6 +298,7 @@ public abstract class AopUtils {
 	/**
 	 * Determine the sublist of the {@code candidateAdvisors} list
 	 * that is applicable to the given class.
+	 * 确定适用于给定类的{@code candidateAdvisors}列表的子列表。
 	 * @param candidateAdvisors the Advisors to evaluate
 	 * @param clazz the target class
 	 * @return sublist of Advisors that can apply to an object of the given class
@@ -307,6 +310,7 @@ public abstract class AopUtils {
 		}
 		List<Advisor> eligibleAdvisors = new ArrayList<>();
 		for (Advisor candidate : candidateAdvisors) {
+			// 首先处理引介增强
 			if (candidate instanceof IntroductionAdvisor && canApply(candidate, clazz)) {
 				eligibleAdvisors.add(candidate);
 			}
@@ -317,6 +321,7 @@ public abstract class AopUtils {
 				// already processed
 				continue;
 			}
+			// 普通advisor的匹配
 			if (canApply(candidate, clazz, hasIntroductions)) {
 				eligibleAdvisors.add(candidate);
 			}
